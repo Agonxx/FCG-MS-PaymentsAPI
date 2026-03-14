@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentsapi
+  labels:
+    app: paymentsapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentsapi
+  template:
+    metadata:
+      labels:
+        app: paymentsapi
+    spec:
+      containers:
+        - name: paymentsapi
+          image: paymentsapi:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__PaymentsDB
+              valueFrom:
+                secretKeyRef:
+                  name: paymentsapi-secret
+                  key: connection-string
+            - name: RabbitMQ__Host
+              valueFrom:
+                configMapKeyRef:
+                  name: paymentsapi-config
+                  key: rabbitmq-host
+            - name: RabbitMQ__VHost
+              valueFrom:
+                configMapKeyRef:
+                  name: paymentsapi-config
+                  key: rabbitmq-vhost
+            - name: RabbitMQ__Username
+              valueFrom:
+                secretKeyRef:
+                  name: paymentsapi-secret
+                  key: rabbitmq-username
+            - name: RabbitMQ__Password
+              valueFrom:
+                secretKeyRef:
+                  name: paymentsapi-secret
+                  key: rabbitmq-password
