@@ -1,0 +1,57 @@
+services:
+
+  paymentsapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: paymentsapi
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PaymentsDB=Server=sqlserver;Database=PaymentsDB;User Id=sa;Password=Sa12345678!;TrustServerCertificate=True
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__VHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fcg-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver-payments
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Sa12345678!
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Sa12345678!", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fcg-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-payments
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fcg-network
+
+networks:
+  fcg-network:
+    driver: bridge
