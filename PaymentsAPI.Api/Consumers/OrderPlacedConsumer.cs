@@ -27,16 +27,15 @@ namespace PaymentsAPI.Api.Consumers
 
             var pagamento = await _service.ProcessarAsync(ev.OrderId, ev.UserId, ev.JogoId, ev.Titulo, ev.Preco);
 
-            await _publishEndpoint.Publish(new PaymentProcessedEvent
-            {
-                OrderId = pagamento.OrderId,
-                UserId = pagamento.UserId,
-                JogoId = pagamento.JogoId,
-                Titulo = pagamento.Titulo,
-                Preco = pagamento.Preco,
-                Status = pagamento.Status,
-                ProcessadoEm = pagamento.ProcessadoEm
-            });
+            await _publishEndpoint.Publish(new PaymentProcessedEvent(
+                pagamento.OrderId,
+                pagamento.UserId,
+                pagamento.JogoId,
+                pagamento.Titulo,
+                pagamento.Preco,
+                pagamento.Status,
+                pagamento.ProcessadoEm
+            ));
 
             _logger.LogInformation(
                 "PaymentProcessedEvent publicado: OrderId={OrderId} | Status={Status}",
